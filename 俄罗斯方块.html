@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title></title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      body,
+      html {
+        width: 100%;
+        height: 100%;
+        background-color: #d9d9d9;
+      }
+      #mainbox {
+        width: 500px;
+        height: 580px;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin: auto;
+        border: 1px solid #000000;
+      }
+      #map {
+        position: relative;
+        float: left;
+        width: 320px;
+        height: 560px;
+        margin: 10px;
+        background-color: #000;
+      }
+      #map > * {
+        position: absolute;
+        border: 1px solid #a9a9a9;
+        box-sizing: border-box;
+      }
+      #box {
+        float: left;
+        position: relative;
+        width: 150px;
+        height: 560px;
+        margin: 10px auto;
+        border: 1px solid #959595;
+      }
+      #preview {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        background-color: #000000;
+        margin: 15px;
+      }
+      #preview > * {
+        position: absolute;
+        border: 1px solid #a9a9a9;
+        box-sizing: border-box;
+      }
+      #btn {
+        position: absolute;
+        width: 120px;
+        height: 400px;
+        top: 140px;
+        margin: 15px;
+        text-align: center;
+      }
+      #btn > button {
+        width: 100px;
+        height: 30px;
+        margin: 20px auto;
+        background: #ecc787;
+        outline: none;
+      }
+      #score {
+        width: 100px;
+        height: 40px;
+        line-height: 40px;
+        font-size: 18px;
+        color: #e3241f;
+        background-color: #ecc787;
+        margin: 20px 10px;
+        border-radius: 10px;
+      }
+      #thisScore {
+        position: absolute;
+        top: 60px;
+        width: 120px;
+        height: 40px;
+        line-height: 40px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #d21f14;
+        visibility: hidden;
+      }
+      .animate {
+        animation: scoreAnimate 0.6s linear forwards;
+      }
+      @keyframes scoreAnimate {
+        from {
+          transform: translatey(0);
+          visibility: hidden;
+        }
+        to {
+          transform: translatey(-80px);
+          visibility: visible;
+        }
+      }
+      #add {
+        width: 350px;
+        height: 400px;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin: auto;
+        border: 1px solid #000000;
+        background-color: #ffffff;
+        display: none;
+      }
+      #checkColor {
+        width: 240px;
+        height: 40px;
+        margin: 20px auto 5px;
+        font-size: 13px;
+      }
+      #squerBox {
+        position: relative;
+        width: 240px;
+        height: 240px;
+        background-color: #000000;
+        margin: 5px auto 15px;
+      }
+      #squerBox > * {
+        position: absolute;
+        box-sizing: border-box;
+        border: 1px solid #a9a9a9;
+      }
+      #checkBox {
+        width: 240px;
+        height: 40px;
+        margin: 10px auto;
+        text-align: center;
+      }
+      #checkBox > button {
+        width: 70px;
+        margin: 10px 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mainbox">
+      <div id="map"></div>
+      <div id="box">
+        <div id="preview"></div>
+        <div id="btn">
+          <div id="score">0</div>
+          <div id="thisScore">0</div>
+          <button id="start_btn">开始游戏</button>
+          <button id="restart_btn">重新开始</button>
+          <button id="add_btn">自定义模块</button>
+          <button id="close_btn">退出游戏</button>
+        </div>
+      </div>
+    </div>
+    <div id="add">
+      <div id="checkColor">
+        选择颜色：<input id="ck_color" type="color" />（请使用单色）
+      </div>
+      <div id="squerBox"></div>
+      <div id="checkBox">
+        <button id="sure">确定</button>
+        <button id="cancle">取消</button>
+      </div>
+    </div>
+    <script>
+      /*
+       * 定义形状
+       * 默认五个形状 L T Z O I
+       * 用户按上键变换形状
+       * */
+      var squer = [
+        //L
+        [
+          [
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 1, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [1, 1, 1, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 1, 1, 0],
+            [0, 0, 1, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 0, 1, 0],
+            [1, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+        ],
+        //T
+        [
+          [
+            [1, 1, 1, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 0, 1, 0],
+            [0, 1, 1, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 1, 0, 0],
+            [1, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [1, 0, 0, 0],
+            [1, 1, 0, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+        ],
+        //Z
+        [
+          [
+            [1, 1, 0, 0],
+            [0, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 0, 1, 0],
+            [0, 1, 1, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [1, 1, 0, 0],
+            [0, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 0, 1, 0],
+            [0, 1, 1, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 0],
+          ],
+        ],
+        //0
+        [
+          [
+            [0, 1, 1, 0],
+            [0, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 1, 1, 0],
+            [0, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 1, 1, 0],
+            [0, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 1, 1, 0],
+            [0, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+        ],
+        [
+          [
+            [1, 1, 1, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+          ],
+          [
+            [1, 1, 1, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+          ],
+          [
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+          ],
+        ],
+      ];
+
+      var Base = {
+        map_rows: 14, //地图的行和列
+        map_colume: 8,
+        map_squer_w: 40, //地图小块的宽高
+        map_squer_h: 40,
+        pre_rows: 4, //预览框的行和列
+        pre_colume: 4,
+        pre_squer_w: 30, //预览框小块的宽高
+        pre_squer_h: 30,
+        userDefined_w: 60, //自定义框小块的宽高
+        userDefined_h: 60,
+        map: [], //存放属性地图
+        currentSquer: null, //当前的形状
+        currentWay: null, //当前形状的方向
+        current_r: null, //当前块对应地图的行坐标
+        current_c: null, //当前块对应地图的列坐标
+        bgColor: ["blue", "pink", "yellow", "green", "purple"], //形状的背景色
+        time: null, //存放下落的计时器
+        speed: 500, //下落的速度
+        map_suqer_type: null, //地图上的块形状
+        map_squer_way: null, //地图上的块方向
+        map_squer_r: null, //地图上块的行坐标
+        map_squer_c: null, //地图上块的列坐标
+        game_start: false, //记录游戏开始状态
+        fullRows: [], //存储满行的行索引
+        score: 0, //总得分
+        thisScore: 0, //本次得分
+        addSquer: [], //存放自定义形状
+      };
+      //策略的使用
+      var BaseMethod = {
+        //获取元素的方法   根据id
+        getElement: function (id) {
+          return document.getElementById(id);
+        },
+        //初始化地图界面的方法
+        _initPage: function () {
+          for (var i = 0; i < Base.map_rows; i++) {
+            for (var k = 0; k < Base.map_colume; k++) {
+              var div = document.createElement("div");
+              div.id = i + "-" + k;
+              div.style.width = Base.map_squer_w + "px";
+              div.style.height = Base.map_squer_h + "px";
+              div.style.left = Base.map_squer_w * k + "px";
+              div.style.top = Base.map_squer_h * i + "px";
+              this.getElement("map").appendChild(div);
+            }
+          }
+        },
+        //初始化预览界面
+        _initPreview: function () {
+          for (var i = 0; i < Base.pre_rows; i++) {
+            for (var k = 0; k < Base.pre_colume; k++) {
+              var div = document.createElement("div");
+              div.id = "pre-" + i + "-" + k;
+              div.style.width = Base.pre_squer_w + "px";
+              div.style.height = Base.pre_squer_h + "px";
+              div.style.left = Base.pre_squer_w * k + "px";
+              div.style.top = Base.pre_squer_h * i + "px";
+              this.getElement("preview").appendChild(div);
+            }
+          }
+        },
+        //初始化属性map
+        _initMap: function () {
+          for (var i = 0; i < Base.map_rows; i++) {
+            Base.map.push([]);
+            for (var k = 0; k < Base.map_colume; k++) {
+              Base.map[i][k] = {};
+              Base.map[i][k].ishas = false; //记录当前块是否填充颜色
+              Base.map[i][k].currentColor = null; //记录当前块的颜色
+            }
+          }
+        },
+        //构造随机形状的方法
+        getRandom: function (m) {
+          return Math.floor(Math.random() * m);
+        },
+        //下一个块的形状 和在地图上的初始位置
+        nextSquer: function () {
+          //形状索引
+          Base.currentSquer = this.getRandom(squer.length);
+          //方向索引
+          Base.currentWay = this.getRandom(4);
+          //地图上对应的行坐标
+          Base.current_r = -4;
+          Base.current_c = (Base.map_colume - Base.pre_colume) / 2;
+        },
+        //存储地图上的形状   和初始坐标
+        saveMapSquer: function () {
+          Base.map_squer_type = Base.currentSquer;
+          Base.map_squer_way = Base.currentWay;
+          Base.map_squer_r = Base.current_r;
+          Base.map_squer_c = Base.current_c;
+        },
+        //获取颜色的方法
+        getColor: function (index) {
+          return Base.bgColor[index];
+        },
+        //绘制预览区域
+        drawPreview: function () {
+          for (var i = 0; i < Base.pre_rows; i++) {
+            for (var k = 0; k < Base.pre_colume; k++) {
+              //获取预览区域对应的div
+              var div = this.getElement("pre-" + i + "-" + k);
+              //只绘制1的位置   1为true  0为false
+              if (squer[Base.currentSquer][Base.currentWay][i][k]) {
+                //根据当前块的形状绘制背景色
+                div.style.backgroundColor = this.getColor(Base.currentSquer);
+              } else {
+                div.style.backgroundColor = "";
+              }
+            }
+          }
+        },
+        //绘制地图上的形状
+        drawMapSquer: function () {
+          for (var i = 0; i < Base.pre_rows; i++) {
+            for (var k = 0; k < Base.pre_colume; k++) {
+              //只绘制1的位置   1为true  0为false
+              if (
+                Base.map_squer_r + i >= 0 &&
+                squer[Base.map_squer_type][Base.map_squer_way][i][k]
+              ) {
+                //获取地图区域对应坐标的div
+                var div = this.getElement(
+                  i + Base.map_squer_r + "-" + (k + Base.map_squer_c)
+                );
+                div.style.backgroundColor = this.getColor(Base.map_squer_type);
+              }
+            }
+          }
+        },
+        //下落时 清除当前块之前颜色的方法
+        clearColor: function () {
+          for (var i = 0; i < Base.pre_rows; i++) {
+            for (var k = 0; k < Base.pre_colume; k++) {
+              //只绘制1的位置   1为true  0为false
+              if (
+                Base.map_squer_r + i >= 0 &&
+                squer[Base.map_squer_type][Base.map_squer_way][i][k]
+              ) {
+                //获取地图区域对应坐标的div
+                var div = this.getElement(
+                  Base.map_squer_r + i + "-" + (Base.map_squer_c + k)
+                );
+                div.style.backgroundColor = "";
+              }
+            }
+          }
+        },
+        //修改属性map中的属性值  将当前块存放在属性map中
+        update_map: function () {
+          //修改属性map的属性值
+          for (var i = 0; i < Base.pre_rows; i++) {
+            for (var k = 0; k < Base.pre_colume; k++) {
+              if (
+                Base.map_squer_r + i >= 0 &&
+                squer[Base.map_squer_type][Base.map_squer_way][i][k]
+              ) {
+                Base.map[Base.map_squer_r + i][
+                  Base.map_squer_c + k
+                ].ishas = true;
+                Base.map[Base.map_squer_r + i][
+                  Base.map_squer_c + k
+                ].currentColor = Base.map_squer_type;
+              }
+            }
+          }
+        },
+        //检测是否还能下落的方法
+        canDown: function () {
+          for (var i = Base.pre_rows - 1; i >= 0; i--) {
+            for (var k = 0; k < Base.pre_colume; k++) {
+              if (!squer[Base.map_squer_type][Base.map_squer_way][i][k]) {
+                //遇0直接进入下一个循环
+                continue;
+              }
+              //检测是否到地图最下边  如果到底 返回false  不能再下落
+              if (Base.map_squer_r + i + 1 >= Base.map_rows) {
+                return false;
+              }
+              //检测下一行是否有块
+              if (
+                Base.map_squer_r + i + 1 >= 0 &&
+                Base.map[Base.map_squer_r + i + 1][Base.map_squer_c + k].ishas
+              ) {
+                return false;
+              }
+            }
+          }
+          return true;
+        },
+        //检测是否能右移
+        canRight: function () {
+          for (var i = 0; i < Base.pre_rows; i++) {
+            for (var k = Base.pre_colume - 1; k >= 0; k--) {
+              if (!squer[Base.map_squer_type][Base.map_squer_way][i][k]) {
+                //遇0直接进入下一个循环
+                continue;
+              }
+              //检测是否到地图最右边  如果到了 返回false  不能再右移
+              if (Base.map_squer_c + k + 1 >= Base.map_colume) {
+                return false;
+              }
+              //检测右边是否有块
+              if (
+                Base.map_squer_r + i >= 0 &&
+                Base.map[Base.map_squer_r + i][Base.map_squer_c + k + 1].ishas
+              ) {
+                return false;
+              }
+            }
+          }
+          return true;
+        },
+        //检测是否能左移
+        canLeft: function () {
+          for (var i = 0; i < Base.pre_rows; i++) {
+            for (var k = 0; k < Base.pre_colume; k++) {
+              if (!squer[Base.map_squer_type][Base.map_squer_way][i][k]) {
+                //遇0直接进入下一个循环
+                continue;
+              }
+              //检测是否到地图最左边  如果到了 返回false  不能再左移
+              if (Base.map_squer_c + k <= 0) {
+                return false;
+              }
+              //检测左边是否有块
+              if (
+                Base.map_squer_r + i >= 0 &&
+                Base.map[Base.map_squer_r + i][Base.map_squer_c + k - 1].ishas
+              ) {
+                return false;
+              }
+            }
+          }
+          return true;
+        },
+        //检测是否能变形
+        canRotate: function () {
+          //这里只是假设已经变形，不能让Base.map_squer_way实际发生变化   所以要定义一个变量来接收
+          var way = Base.map_squer_way;
+          //Base.map_squer_way = ++Base.map_squer_way > 3 ? 0 : Base.map_squer_way;   不能直接++Base.map_squer_way，否则它的值会发生变化
+          way = ++way > 3 ? 0 : way;
+          //使用变形之后的形状去检测map中对应位置是否有内容
+          for (var i = 0; i < Base.pre_rows; i++) {
+            for (var k = 0; k < Base.pre_colume; k++) {
+              if (!squer[Base.map_squer_type][way][i][k]) {
+                continue;
+              }
+              //检测变形之后是否出边界
+              if (Base.map_squer_r + i + 1 >= Base.map_rows) {
+                return false;
+              }
+              if (Base.map_squer_c + k + 1 >= Base.map_colume) {
+                return false;
+              }
+              if (Base.map_squer_r + k <= 0) {
+                return false;
+              }
+              //检测当前变形的位置是否有形状
+              if (
+                Base.map_squer_r + i >= 0 &&
+                Base.map[Base.map_squer_r + i][Base.map_squer_c + k].ishas
+              ) {
+                return false;
+              }
+            }
+          }
+          return true;
+        },
+        //检测是否满行
+        checkFullRows: function () {
+          for (var i = Base.map_rows - 1; i >= 0; i--) {
+            var full = true;
+            for (var k = 0; k < Base.map_colume; k++) {
+              if (!Base.map[i][k].ishas) {
+                full = false;
+              }
+            }
+            if (full) {
+              //如果当前行是满行
+              Base.fullRows.push(i);
+            }
+          }
+        },
+        //满行时消除界面对应的行颜色
+        clearRowColor: function () {
+          for (var i = 0; i < Base.fullRows.length; i++) {
+            for (var k = 0; k < Base.map_colume; k++) {
+              var div = this.getElement(Base.fullRows[i] + "-" + k);
+              div.style.backgroundColor = "";
+            }
+          }
+        },
+        //更新属性map
+        resetMapRow: function () {
+          for (var i = Base.fullRows.length - 1; i >= 0; i--) {
+            for (var k = Base.fullRows[i] - 1; k >= 0; k--) {
+              //满行的上一行
+              for (var j = 0; j < Base.map_colume; j++) {
+                Base.map[k + 1][j].ishas = Base.map[k][j].ishas;
+                Base.map[k + 1][j].currentColor = Base.map[k][j].currentColor;
+              }
+            }
+          }
+        },
+        //重绘地图界面
+        reDrawMap: function () {
+          for (var i = 0; i < Base.map_rows; i++) {
+            for (var k = 0; k < Base.map_colume; k++) {
+              var div = this.getElement(i + "-" + k);
+              if (Base.map[i][k].ishas) {
+                div.style.backgroundColor = this.getColor(
+                  Base.map[i][k].currentColor
+                );
+              } else {
+                div.style.backgroundColor = "";
+              }
+            }
+          }
+        },
+        //加分
+        addScore: function () {
+          for (var i = 0; i < Base.fullRows.length; i++) {
+            Base.score += 10;
+            Base.thisScore += 10;
+          }
+          score.innerText = Base.score;
+          thisScore.innerText = "+" + Base.thisScore;
+          thisScore.classList.add("animate");
+          setTimeout(function () {
+            thisScore.classList.remove("animate");
+          }, 600);
+          Base.thisScore = 0;
+        },
+        //初始化自定义模块
+        _initUserDefined: function () {
+          for (var i = 0; i < Base.pre_rows; i++) {
+            //对应的行
+            Base.addSquer.push([]);
+            for (var k = 0; k < Base.pre_colume; k++) {
+              //对应的列
+              Base.addSquer[i].push([0, 0, 0, 0]);
+              var div = document.createElement("div");
+              div.id = "user-" + i + "-" + k;
+              div.setAttribute("data-row", i);
+              div.setAttribute("data-col", k);
+              div.style.width = Base.userDefined_w + "px";
+              div.style.height = Base.userDefined_h + "px";
+              div.style.left = Base.userDefined_w * k + "px";
+              div.style.top = Base.userDefined_h * i + "px";
+              this.getElement("squerBox").appendChild(div);
+              //每个div添加点击事件
+              div.addEventListener("click", this.handle);
+            }
+          }
+        },
+        //自定义模块div的点击事件方法
+        handle: function () {
+          var row = this.getAttribute("data-row");
+          var col = this.getAttribute("data-col");
+          if (Base.addSquer[0][row][col] == 1) {
+            this.style.backgroundColor = "";
+            Base.addSquer[0][row][col] = 0;
+          } else {
+            if (ck_color.value == "#000000") {
+              alert("请选择颜色！");
+              return;
+            } else {
+              this.style.backgroundColor = ck_color.value;
+              Base.addSquer[0][row][col] = 1;
+            }
+          }
+          //开始自动旋转
+          var arr = Base.addSquer[0];
+          var len = arr.length;
+          var deg90 = Base.addSquer[1];
+          for (var i = 0; i < len; i++) {
+            for (var k = 0; k < len; k++) {
+              deg90[k][len - i - 1] = arr[i][k]; //列变成行  行变成列 0行-3列  1-2  2-1  3-0
+            }
+          }
+          var deg180 = Base.addSquer[2];
+          for (var i = 0; i < len; i++) {
+            for (var k = 0; k < len; k++) {
+              deg180[len - i - 1][len - k - 1] = arr[i][k]; //0行-3行  1-2  2-1  3-0
+            }
+          }
+          var deg270 = Base.addSquer[3];
+          for (var i = 0; i < len; i++) {
+            for (var k = 0; k < len; k++) {
+              deg270[len - k - 1][i] = arr[i][k]; //行变成列  列变成行 0列-3行  1-2  2-1  3-0
+            }
+          }
+        },
+        //检测该形状是否已存在
+        checkSquer: function () {
+          //遍历squer
+          for (var i = 0; i < squer.length; i++) {
+            var ishasSquer = true;
+            for (var k = 0; k < Base.pre_rows; k++) {
+              for (var j = 0; j < Base.pre_colume; j++) {
+                if (Base.addSquer[0][k][j] != squer[i][0][k][j]) {
+                  ishasSquer = false;
+                }
+              }
+            }
+            console.log(ishasSquer);
+            if (ishasSquer) {
+              return true;
+            }
+          }
+          return false;
+        },
+        //初始化方法
+        init: function () {
+          //初始化地图界面
+          this._initPage();
+          //初始化预览界面
+          this._initPreview();
+          //初始化属性map
+          this._initMap();
+        },
+        //加载预览形状的方法
+        loadPreview: function () {
+          //随机形状
+          this.nextSquer();
+          //绘制预览区域
+          this.drawPreview();
+        },
+        //连续下落的方法
+        loop: function () {
+          if (this.canDown()) {
+            //下落时  清空当前形状下落前的颜色
+            this.clearColor();
+            Base.map_squer_r++;
+            this.drawMapSquer();
+          } else {
+            //不能下落的时候
+            //更新属性map  将当前块的形状存到属性map中
+            this.update_map();
+            //检测当前块的初始行是否小于等于0
+            if (Base.map_squer_r <= 0) {
+              //游戏结束
+              clearInterval(time);
+              alert("Game Over!");
+              Base.game_start = false;
+              return;
+            }
+            //满行消除
+            this.checkFullRows();
+            if (Base.fullRows.length > 0) {
+              //存在满行
+              //加分
+              this.addScore();
+              //消除界面对应的行
+              this.clearRowColor();
+              //清除map对应的行
+              this.resetMapRow();
+              //100ms后重绘地图界面   清空满行索引的数组
+              var that = this;
+              setTimeout(function () {
+                that.reDrawMap();
+                Base.fullRows = [];
+              }, 200);
+              console.log(Base.fullRows);
+            }
+
+            //更新存储的形状  将上次随机出的形状 和初始坐标重新赋值
+            this.saveMapSquer();
+            //绘制地图上的形状
+            this.drawMapSquer();
+            //重新随机 预览
+            this.loadPreview();
+          }
+        },
+        //开始游戏
+        start: function () {
+          //存储随机出的形状和初始位置
+          this.saveMapSquer();
+          //绘制地图上的形状
+          this.drawMapSquer();
+          //重新随机 预览
+          this.loadPreview();
+          //形状块下落
+          var that = this;
+          time = setInterval(function () {
+            that.loop();
+          }, Base.speed);
+        },
+        _initUserDefinedMap: function () {
+          //添加自定义模块界面   显示都是默认形状里面 的第一个行  0
+          for (var h = 0; h < Base.addSquer.length; h++) {
+            for (var i = 0; i < Base.pre_rows; i++) {
+              for (var k = 0; k < Base.pre_colume; k++) {
+                if (Base.addSquer[h][i][k] == 1 && h != 0) {
+                  Base.addSquer[h][i][k] = 0;
+                } else {
+                  Base.addSquer[h][i][k] = 0;
+                  //界面对应的颜色修改
+                  var div = this.getElement("user-" + i + "-" + k);
+                  if (div) {
+                    div.style.backgroundColor = "";
+                  }
+                }
+              }
+            }
+          }
+          //颜色选择清回默认
+          ck_color.value = "#000000";
+        },
+      };
+      window.onload = function () {
+        //初始化地图、预览块、属性map
+        BaseMethod.init();
+        //加载预览形状
+        BaseMethod.loadPreview();
+
+        //初始化自定义模块
+        BaseMethod._initUserDefined();
+        //点击开始按钮事件
+        start_btn.onclick = function () {
+          if (!Base.game_start) {
+            BaseMethod.start();
+            Base.game_start = true;
+          }
+          document.body.onkeydown = function (e) {
+            switch (e.key) {
+              case "ArrowUp":
+                if (BaseMethod.canRotate()) {
+                  BaseMethod.clearColor();
+                  Base.map_squer_way =
+                    ++Base.map_squer_way > 3 ? 0 : Base.map_squer_way;
+                  BaseMethod.drawMapSquer();
+                }
+                break;
+              case "ArrowRight":
+                if (BaseMethod.canRight()) {
+                  BaseMethod.clearColor();
+                  Base.map_squer_c++;
+                  BaseMethod.drawMapSquer();
+                }
+                break;
+              case "ArrowDown":
+                if (BaseMethod.canDown()) {
+                  BaseMethod.loop();
+                }
+                break;
+              case "ArrowLeft":
+                if (BaseMethod.canLeft()) {
+                  BaseMethod.clearColor();
+                  Base.map_squer_c--;
+                  BaseMethod.drawMapSquer();
+                }
+                break;
+            }
+          };
+        };
+        //退出游戏
+        close_btn.onclick = function () {
+          window.close();
+        };
+        //重新开始
+        restart_btn.onclick = function () {
+          if (Base.game_start) {
+            clearInterval(time);
+            BaseMethod._initMap();
+            BaseMethod.reDrawMap();
+            BaseMethod.start();
+          }
+        };
+        //自定义模块
+        add_btn.onclick = function () {
+          add.style.display = "block";
+        };
+        //确定添加
+        sure.onclick = function () {
+          //检测该形状是否已存在  如过存在 提示该形状已存在
+          if (BaseMethod.checkSquer()) {
+            alert("该形状已存在，请重新选择");
+            return false;
+          } else {
+            var arrinfo = [];
+            for (var i = 0; i < 4; i++) {
+              var arr = [];
+              for (var k = 0; k < 4; k++) {
+                arr.push([...Base.addSquer[i][k]]);
+              }
+              arrinfo.push(arr);
+            }
+            squer.push(arrinfo);
+            Base.bgColor.push(ck_color.value);
+            BaseMethod._initUserDefinedMap();
+            add.style.display = "none";
+          }
+        };
+        //取消添加
+        cancle.onclick = function () {
+          add.style.display = "none";
+        };
+      };
+    </script>
+  </body>
+</html>
